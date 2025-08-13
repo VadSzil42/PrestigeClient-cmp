@@ -1,0 +1,56 @@
+# This workflow is named "Build Fabric Mod" and will build your Minecraft mod.
+name: Build Fabric Mod
+
+# Controls when the action will run.
+on:
+  # Triggers the workflow on push or pull request events to the 'main' branch.
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  # Allows you to run this workflow manually from the Actions tab in GitHub.
+  workflow_dispatch:
+
+# Defines a single job named 'build'.
+jobs:
+  build:
+    # Specifies that the job will run on the latest version of an Ubuntu runner.
+    runs-on: ubuntu-latest
+
+    # Defines the steps the job will perform.
+    steps:
+      # Step 1: Checks out your repository code using the 'actions/checkout' action.
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Step 2: Sets up a Java 17 environment. This is required by your build.gradle file.
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          # Disables caching for this step as Gradle handles its own caching.
+          cache: 'gradle'
+          
+      # Step 3: Sets up the Gradle environment and caches the Gradle dependencies.
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          cache-read-only: true
+
+      # Step 4: Runs the Gradle 'build' task to compile the mod and create the JAR file.
+      # Since we don't have the gradlew script, we can run 'gradle build' directly.
+      - name: Build with Gradle
+        run: gradle build
+
+      # Step 5: Uploads the generated JAR file as a workflow artifact.
+      # This allows you to download the build result from the GitHub Actions page.
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: built-mod-jar
+          # The path to the built JAR file, which is located in the build/libs/ directory.
+          # The wildcard ensures it picks up the correct versioned file.
+          path: build/libs/*.jar
